@@ -3,6 +3,8 @@
   <arg name="limited" default="false"/>
   <arg name="paused" default="false"/>
   <arg name="gui" default="true"/>
+  <arg name="schunk_gripper" default="false"/>
+  <arg name="festo_gripper" default="false"/>
   
   <!-- startup simulated world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -12,9 +14,23 @@
   </include>
 
   <!-- send robot urdf to param server -->
-  <include file="$(find ur_description)/launch/ur3_upload.launch">
-    <arg name="limited" value="$(arg limited)"/>
-  </include>
+  <group if="$(arg schunk_gripper)">
+      <include file="$(find db_description)/launch/ur3_upload_with_gripper.launch">
+        <arg name="limited" value="$(arg limited)"/>
+      </include>
+  </group>
+  <group unless="$(arg schunk_gripper)">
+    <group if="$(arg festo_gripper)">
+      <include file="$(find db_description)/launch/ur3_upload_with_festo.launch">
+        <arg name="limited" value="$(arg limited)"/>
+      </include>
+    </group>
+    <group unless="$(arg festo_gripper)">
+      <include file="$(find ur_description)/launch/ur3_upload.launch">
+        <arg name="limited" value="$(arg limited)"/>
+      </include>
+    </group>
+  </group>
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot -z 0.1" respawn="false" output="screen" />
